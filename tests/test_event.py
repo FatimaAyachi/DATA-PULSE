@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 import pytest
 from pydantic import ValidationError
@@ -8,99 +8,54 @@ from data_pulse.schemas.event import Event
 
 def test_valid_event() -> None:
     event = Event(
-        event_id="event-001",
-        source="api",
-        title="Test event",
-        timestamp=datetime(2026, 10, 7, 20, 0, 0),
-        category="test",
-        value=42.5,
+        event_id="1326461897",
+        source="GDELT",
+        event_date=date(2025, 10, 6),
+        event_code="051",
+        event_root_code="05",
+        actor1="KING",
+        actor2="STUDENT",
+        action_location="Pennsylvania, United States",
+        country_code="US",
+        goldstein_scale=3.4,
+        num_mentions=10,
+        num_sources=1,
+        num_articles=10,
+        avg_tone=5.82329317269076,
+        source_url="https://example.com/article",
     )
 
-    assert event.event_id == "event-001"
-    assert event.source == "api"
-    assert event.title == "Test event"
-    assert event.category == "test"
-    assert event.value == 42.5
-
-
-def test_event_without_optional_value() -> None:
-    event = Event(
-        event_id="event-002",
-        source="api",
-        title="Test event",
-        timestamp=datetime(2026, 10, 7, 20, 0, 0),
-        category="test",
-    )
-
-    assert event.value is None
+    assert event.event_id == "1326461897"
+    assert event.source == "GDELT"
+    assert event.event_code == "051"
+    assert event.actor1 == "KING"
 
 
 def test_event_rejects_empty_event_id() -> None:
     with pytest.raises(ValidationError):
         Event(
             event_id="",
-            source="api",
-            title="Test event",
-            timestamp=datetime(2026, 10, 7, 20, 0, 0),
-            category="test",
+            source="GDELT",
+            event_date=date(2025, 10, 6),
+            event_code="051",
+            event_root_code="05",
+            num_mentions=10,
+            num_sources=1,
+            num_articles=10,
+            source_url="https://example.com",
         )
 
 
-def test_event_rejects_empty_source() -> None:
+def test_event_rejects_negative_mentions() -> None:
     with pytest.raises(ValidationError):
         Event(
-            event_id="event-003",
-            source="",
-            title="Test event",
-            timestamp=datetime(2026, 10, 7, 20, 0, 0),
-            category="test",
+            event_id="1326461897",
+            source="GDELT",
+            event_date=date(2025, 10, 6),
+            event_code="051",
+            event_root_code="05",
+            num_mentions=-1,
+            num_sources=1,
+            num_articles=10,
+            source_url="https://example.com",
         )
-
-
-def test_event_rejects_empty_title() -> None:
-    with pytest.raises(ValidationError):
-        Event(
-            event_id="event-004",
-            source="api",
-            title="",
-            timestamp=datetime(2026, 10, 7, 20, 0, 0),
-            category="test",
-        )
-
-
-def test_event_rejects_empty_category() -> None:
-    with pytest.raises(ValidationError):
-        Event(
-            event_id="event-005",
-            source="api",
-            title="Test event",
-            timestamp=datetime(2026, 10, 7, 20, 0, 0),
-            category="",
-        )
-def test_event_from_dict() -> None:
-    data = {
-        "event_id": "event-006",
-        "source": "api",
-        "title": "External event",
-        "timestamp": "2026-10-07T20:00:00",
-        "category": "external",
-        "value": 15.5,
-    }
-
-    event = Event.model_validate(data)
-
-    assert event.event_id == "event-006"
-    assert event.title == "External event"
-    assert event.timestamp.year == 2026
-    assert event.value == 15.5
-def test_event_from_invalid_dict() -> None:
-    data = {
-        "event_id": "",
-        "source": "api",
-        "title": "Invalid event",
-        "timestamp": "not-a-date",
-        "category": "test",
-    }
-
-    with pytest.raises(ValidationError):
-        Event.model_validate(data)

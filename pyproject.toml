@@ -12,6 +12,8 @@ dependencies = [
     "pandas",
     "python-dotenv",
     "pydantic",
+    "openpyxl",
+    "pyarrow",
 ]
 
 [project.optional-dependencies]
