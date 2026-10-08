@@ -27,3 +27,19 @@ def build_gdelt_gold(
     )
 
     return gold
+def write_gdelt_gold(
+    df: DataFrame,
+    output_path: str | Path,
+) -> Path:
+    """Write the GDELT Gold dataset as partitioned Parquet."""
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    (
+        df.write
+        .mode("overwrite")
+        .partitionBy("event_date")
+        .parquet(str(output_path))
+    )
+
+    return output_path

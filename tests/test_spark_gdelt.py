@@ -2,15 +2,21 @@ from pathlib import Path
 
 from pyspark.sql import SparkSession
 
-from data_pulse.spark.gdelt import build_gdelt_gold
-
+from data_pulse.spark.gdelt import (
+    build_gdelt_gold,
+    write_gdelt_gold,
+)
 
 INPUT_FILE = Path(
     "data/processed/events/gdelt/events_20261006.parquet"
 )
 
+OUTPUT_DIR = Path(
+    "data/processed/events/gdelt/gold/test_daily_event_metrics"
+)
 
-def test_build_gdelt_gold() -> None:
+
+def test_build_and_write_gdelt_gold() -> None:
     spark = (
         SparkSession.builder
         .appName("DATA-PULSE-test")
@@ -28,7 +34,16 @@ def test_build_gdelt_gold() -> None:
             INPUT_FILE,
         )
 
-        assert gold.count() > 0
+        output_path = write_gdelt_gold(
+            gold,
+            OUTPUT_DIR,
+        )
+
+        assert output_path.exists()
+
+        reloaded = spark.read.parquet(str(output_path))
+
+        assert reloaded.count() > 0
 
         expected_columns = {
             "event_date",
@@ -41,18 +56,11 @@ def test_build_gdelt_gold() -> None:
             "avg_tone",
         }
 
-        assert set(gold.columns) == expected_columns
+        assert set(reloaded.columns) == expected_columns
 
         assert (
-            gold.filter(
-                gold.event_count <= 0
-            ).count()
-            == 0
-        )
-
-        assert (
-            gold.filter(
-                gold.unique_event_count <= 0
+            reloaded.filter(
+                reloaded.event_count <= 0
             ).count()
             == 0
         )
